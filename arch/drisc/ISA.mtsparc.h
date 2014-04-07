@@ -267,6 +267,7 @@ struct ArchDecodeReadLatch
     // Memory store data source
     RegAddr      Rs;
     bool         RsIsLocal;
+    bool         RsIsShared;
     unsigned int RsSize;
 
     ArchDecodeReadLatch() : op1(0), op2(0), op3(0), function(0), asi(0), displacement(0), Rs(), RsIsLocal(false),  RsSize(0) {}

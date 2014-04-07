@@ -19,14 +19,15 @@ namespace drisc
  \param[in] writing Indicates if this register is used in a write
  \returns the physical register address to use for the read or write
  */
-RegAddr Pipeline::DecodeStage::TranslateRegister(unsigned char reg, RegType type, unsigned int size, bool *islocal) const
+RegAddr Pipeline::DecodeStage::TranslateRegister(unsigned char reg, RegType type, unsigned int size, bool *islocal, bool *isshared) const
 {
     // We're always dealing with whole registers
     assert(size % sizeof(Integer) == 0);
     unsigned int nRegs = size / sizeof(Integer);
 
     *islocal = false;
-
+    *isshared = false;
+		
     if (nRegs == 0)
     {
         // Don't translate, just return the address as-is.
@@ -86,6 +87,7 @@ RegAddr Pipeline::DecodeStage::TranslateRegister(unsigned char reg, RegType type
                                                  type == RT_INTEGER ? 'R' : 'F', reg, size);
             }
 
+	    *isshared = true;
             /*
              If we have a read miss, we just suspend on the empty register.
              Either the parent thread will push the family's first dependents,
@@ -141,12 +143,12 @@ Pipeline::PipeAction Pipeline::DecodeStage::OnCycle()
                 );
 
             // Translate registers from window to full register file
-            m_output.Ra = TranslateRegister((unsigned char)m_output.Ra.index, m_output.Ra.type, m_output.RaSize, &m_output.RaIsLocal);
-            m_output.Rb = TranslateRegister((unsigned char)m_output.Rb.index, m_output.Rb.type, m_output.RbSize, &m_output.RbIsLocal);
+            m_output.Ra = TranslateRegister((unsigned char)m_output.Ra.index, m_output.Ra.type, m_output.RaSize, &m_output.RaIsLocal,  &m_output.RaIsShared);
+            m_output.Rb = TranslateRegister((unsigned char)m_output.Rb.index, m_output.Rb.type, m_output.RbSize, &m_output.RbIsLocal,  &m_output.RbIsShared);
             bool dummy;
-            m_output.Rc = TranslateRegister((unsigned char)m_output.Rc.index, m_output.Rc.type, m_output.RcSize, &dummy);
+            m_output.Rc = TranslateRegister((unsigned char)m_output.Rc.index, m_output.Rc.type, m_output.RcSize, &dummy, &dummy);
 #if defined(TARGET_MTSPARC)
-            m_output.Rs = TranslateRegister((unsigned char)m_output.Rs.index, m_output.Rs.type, m_output.RsSize, &m_output.RsIsLocal);
+            m_output.Rs = TranslateRegister((unsigned char)m_output.Rs.index, m_output.Rs.type, m_output.RsSize, &m_output.RsIsLocal, &m_output.RsIsShared);
 #endif
         }
         catch (IllegalInstructionException& ex)

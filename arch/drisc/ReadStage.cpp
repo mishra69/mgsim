@@ -1,6 +1,7 @@
 /*
   Note about the Read Stage:
 
+
   An operand can be several registers big, so data for an operand can
   come from different bypasses. We keep track of which register
   sub-values we've read, and keep checking bypasses until we got all
@@ -295,6 +296,15 @@ bool Pipeline::ReadStage::CheckOperandForSuspension(const OperandInfo& operand)
         }
         return true;
     }
+    // if reg was shared, set the register state in reg file to EMPTY  ABHI
+    if (operand.isshared==true)
+    {   
+            RegValue value = MAKE_EMPTY_REG();
+            value.m_state = RST_EMPTY;
+            m_regFile.WriteRegister(operand.addr, value);   
+
+    }   
+
     return false;
 }
 
@@ -311,9 +321,11 @@ Pipeline::PipeAction Pipeline::ReadStage::OnCycle()
         operand1.addr         = m_input.Ra;
         operand1.value.m_size = m_input.RaSize;
         operand1.islocal      = m_input.RaIsLocal;
+	operand1.isshared      = m_input.RaIsShared;
         operand2.addr         = m_input.Rb;
         operand2.value.m_size = m_input.RbSize;
         operand2.islocal      = m_input.RbIsLocal;
+	operand2.isshared      = m_input.RbIsShared;
 
         m_RaNotPending = m_input.RaNotPending;
 

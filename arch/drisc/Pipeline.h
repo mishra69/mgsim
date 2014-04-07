@@ -154,6 +154,7 @@ class Pipeline : public Object, public Inspect::Interface<Inspect::Read>
         RegAddr         Ra,  Rb,  Rc;
         unsigned int    RaSize, RbSize, RcSize;
         bool            RaIsLocal, RbIsLocal;
+	bool            RaIsShared, RbIsShared; 
         bool            RaNotPending; // Ra is only used to check for Not Pending
 
         // For [f]mov[gsd], the offset in the child family's register file
@@ -168,6 +169,7 @@ class Pipeline : public Object, public Inspect::Interface<Inspect::Read>
             Ra(), Rb(), Rc(),
             RaSize(0), RbSize(0), RcSize(0),
             RaIsLocal(false), RbIsLocal(false),
+	    RaIsShared(false), RbIsShared(false),
             RaNotPending(false),
             regofs(0),
             legacy(false) {}
@@ -283,7 +285,7 @@ class Pipeline : public Object, public Inspect::Interface<Inspect::Read>
         DecodeReadLatch&        m_output;
 
         PipeAction OnCycle();
-        RegAddr TranslateRegister(uint8_t reg, RegType type, unsigned int size, bool *islocal) const;
+        RegAddr TranslateRegister(uint8_t reg, RegType type, unsigned int size, bool *islocal, bool *isShared) const;
         void    DecodeInstruction(const Instruction& instr);
 
 #if defined(TARGET_MTALPHA) || defined(TARGET_MIPS32) || defined(TARGET_MIPS32EL)
@@ -304,13 +306,14 @@ class Pipeline : public Object, public Inspect::Interface<Inspect::Read>
             PipeValue          value;     ///< Final value
             int                offset;    ///< Sub-register of the operand we are currently reading
             bool               islocal;   ///< Whether the operand is a local register (not channel)
+     	    bool               isshared;
 
             // Address and value as read from the register file
             // The PipeValue actually contains a RegValue, but this way the code can remain generic
             RegAddr            addr_reg;  ///< Address of the value read from register
             PipeValue          value_reg; ///< Value as read from the register file
 
-            OperandInfo() : port(0), addr(), value(), offset(0), islocal(false), addr_reg(), value_reg() {}
+            OperandInfo() : port(0), addr(), value(), offset(0), islocal(false), isshared(false), addr_reg(), value_reg() {}
         };
 
         bool ReadRegister(OperandInfo& operand, uint32_t literal);
